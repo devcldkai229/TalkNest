@@ -19,9 +19,9 @@ public interface AuthenticationService {
 
     AuthenticationResponse authenticate(AuthenticationRequest requestLogin) throws JOSEException, ParseException;
 
-    IntrospectResponse introspectRefreshToken(String refreshToken);
+    IntrospectResponse introspectRefreshToken(String refreshToken) throws ParseException, JOSEException;
 
-    AuthenticationResponse refreshToken(String oldRefreshToken);
+    AuthenticationResponse refreshToken(String oldRefreshToken) throws ParseException, JOSEException;
 
-    void logout(String token);
+    void logout(String token) throws ParseException, JOSEException;
 }

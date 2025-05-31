@@ -1,7 +1,7 @@
 package com.backend.TalkNestResourceServer.service.impl;
 
 import com.backend.TalkNestResourceServer.domain.entities.Role;
-import com.backend.TalkNestResourceServer.domain.helpers.JwtProps;
+import com.backend.TalkNestResourceServer.config.JwtProps;
 import com.backend.TalkNestResourceServer.exception.signature.ExpiredTokenException;
 import com.backend.TalkNestResourceServer.exception.signature.VerifyTokenFailedException;
 import com.backend.TalkNestResourceServer.service.JwtService;

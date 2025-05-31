@@ -1,8 +1,7 @@
 package com.backend.TalkNestResourceServer.domain.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.backend.TalkNestResourceServer.domain.enums.Gender;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +30,8 @@ public class UserProfile {
 
     private String phoneNumber;
 
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     private String avatarUrl;
 

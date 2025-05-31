@@ -30,3 +30,8 @@ jwt:
   issuer: talknest.com
   audience: "talknest.webapi.resource-server"
 
+cloudinary:
+  cloud-name: dh54xelyq
+  api-key: 254966277766774
+  api-secret: liOAKvu5uPsi86CbJ6s6yrtdqxk
+

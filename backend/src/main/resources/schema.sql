@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS Users (
 	UpdatedAt TIMESTAMP NULL
 );
 
+CREATE TABLE IF NOT EXISTS Invalidate_Token (
+    Id VARCHAR(500) PRIMARY KEY,
+    Token VARCHAR(1000) UNIQUE,
+    ExpiryAt TIMESTAMP
+)
+
 CREATE TABLE IF NOT EXISTS Refresh_Token (
     Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     UserId UUID NOT NULL,
@@ -25,7 +31,7 @@ CREATE TABLE IF NOT EXISTS Refresh_Token (
 CREATE TABLE IF NOT EXISTS Role (
 	Id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	Name VARCHAR(100) NOT NULL UNIQUE,
-	Description VARCHAR(255) DEFAULT '#NoData'
+	Description TEXT DEFAULT '#NoData'
 );
 
 CREATE TABLE IF NOT EXISTS Permission (
@@ -291,3 +297,21 @@ CREATE TABLE IF NOT EXISTS Notification (
     FOREIGN KEY (TypeId) REFERENCES NotificationType (Id)
 );
 
+-- Partition large tables
+CREATE TABLE Post_2024 PARTITION OF Post
+FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+
+-- Add materialized views for analytics
+CREATE MATERIALIZED VIEW user_stats AS
+SELECT userid, COUNT(*) as post_count,
+       COUNT(DISTINCT follower.followerid) as follower_count
+FROM post LEFT JOIN follower ON post.userid = follower.followedid
+GROUP BY userid;
+
+
+-- Add check constraints
+ALTER TABLE Post ADD CONSTRAINT check_post_type
+CHECK (PostType IN ('TEXT', 'IMAGE', 'VIDEO', 'LINK'));
+
+ALTER TABLE Groups ADD CONSTRAINT check_privacy_level
+CHECK (PrivacyLevel IN ('PUBLIC', 'PRIVATE'));

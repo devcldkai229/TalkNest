@@ -1,6 +1,5 @@
 package com.backend.TalkNestResourceServer.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,15 +11,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-
     @Bean
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity httpSecurity) throws Exception{
-        httpSecurity.authorizeHttpRequests(authorizationManagerRequestMatcherRegistry ->  {
-            authorizationManagerRequestMatcherRegistry.anyRequest().permitAll();
-        }).csrf(httpSecurityCsrfConfigurer -> {
-            httpSecurityCsrfConfigurer.disable();
-        });
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity httpSecurity) {
 
-        return httpSecurity.build();
+
+
+        return null;
     }
+
 }
