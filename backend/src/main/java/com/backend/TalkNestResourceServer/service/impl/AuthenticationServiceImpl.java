@@ -4,14 +4,18 @@ import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationReques
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
+import com.backend.TalkNestResourceServer.domain.entities.InvalidateToken;
 import com.backend.TalkNestResourceServer.domain.entities.RefreshToken;
 import com.backend.TalkNestResourceServer.domain.entities.Users;
 import com.backend.TalkNestResourceServer.domain.entities.VerificationToken;
 import com.backend.TalkNestResourceServer.domain.enums.AuthProvider;
+import com.backend.TalkNestResourceServer.exception.common.NotFoundException;
+import com.backend.TalkNestResourceServer.exception.signature.ExpiredTokenException;
 import com.backend.TalkNestResourceServer.exception.signature.SendVerificationEmailException;
 import com.backend.TalkNestResourceServer.exception.signature.UnauthenticatedException;
 import com.backend.TalkNestResourceServer.exception.signature.UserNotExistsException;
 import com.backend.TalkNestResourceServer.mapper.UserMapper;
+import com.backend.TalkNestResourceServer.repository.InvalidateTokenRepository;
 import com.backend.TalkNestResourceServer.repository.RefreshTokenRepository;
 import com.backend.TalkNestResourceServer.repository.VerificationTokenRepository;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
@@ -47,6 +51,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final EmailUtil emailUtil;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final InvalidateTokenRepository invalidateTokenRepository;
 
     private final JwtService jwtService;
 
@@ -126,6 +132,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         refreshTokenRepository.save(
                 RefreshToken.builder()
+                        .userId(loadedUser.getId())
                         .token(refreshToken)
                         .createdAt(LocalDateTime.now())
                         .expiredDate(jwtService.verifyToken(refreshToken)
@@ -142,17 +149,73 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public IntrospectResponse introspectRefreshToken(String refreshToken) {
-        return null;
+    public IntrospectResponse introspectRefreshToken(String refreshToken) throws ParseException, JOSEException {
+        RefreshToken loadedRefreshToken = refreshTokenRepository.findByToken(refreshToken).orElseThrow(
+                () -> new NotFoundException("Refresh token not exist!")
+        );
+
+        if(loadedRefreshToken.getCreatedAt().isBefore(LocalDateTime.now())) {
+            return IntrospectResponse.builder().isValid(false).build();
+        }
+
+        return IntrospectResponse.builder().isValid(true).build();
     }
 
     @Override
-    public AuthenticationResponse refreshToken(String oldRefreshToken) {
-        return null;
+    public AuthenticationResponse refreshToken(String oldRefreshToken) throws ParseException, JOSEException {
+        var username = jwtService.extractUsername(oldRefreshToken);
+
+        RefreshToken loadedToken = refreshTokenRepository.findByToken(oldRefreshToken).orElse(null);
+        if(loadedToken == null) {
+            throw new NotFoundException("Refresh token invalid");
+        }
+
+        var loadedUser = userService.loadedByUsername(username);
+        if(loadedUser == null) {
+            throw new NotFoundException("User with user name: " + username + " not exist!");
+        }
+
+        String accessToken = jwtService.generateToken(username, false, loadedUser.getRoles());
+        String refreshToken = jwtService.generateToken(username, true, loadedUser.getRoles());
+
+        refreshTokenRepository.save(RefreshToken.builder()
+                .userId(loadedUser.getId())
+                .token(refreshToken)
+                .expiredDate(jwtService.verifyToken(refreshToken)
+                        .getExpirationTime()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime())
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        refreshTokenRepository.deleteByToken(oldRefreshToken);
+
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .isAuthenticated(true)
+                .build();
     }
 
     @Override
-    public void logout(String token) {
+    public void logout(String token) throws ParseException, JOSEException {
+        var claimSet = jwtService.verifyToken(token);
 
+        if (claimSet == null) {
+            throw new UnauthenticatedException("Not perform this action");
+        }
+
+
+        InvalidateToken invalidateToken = InvalidateToken.builder()
+                .id(claimSet.getJWTID())
+                .token(token)
+                .expiryAt(claimSet.getExpirationTime()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime())
+                .build();
+
+        invalidateTokenRepository.save(invalidateToken);
     }
 }

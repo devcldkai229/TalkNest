@@ -1,14 +1,18 @@
 package com.backend.TalkNestResourceServer.controller;
 
 import com.backend.TalkNestResourceServer.domain.ApiResponse;
+import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
+import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
+import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.time.LocalDateTime;
 
 @RestController
@@ -49,6 +53,37 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(apiResponse);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(@RequestBody AuthenticationRequest request) throws ParseException, JOSEException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<AuthenticationResponse>builder()
+                        .statusCode(200)
+                        .message("")
+                        .data(authService.authenticate(request))
+                        .build());
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> refresh(@RequestParam(name = "token") String refreshToken) throws ParseException, JOSEException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<AuthenticationResponse>builder()
+                        .statusCode(200)
+                        .message("")
+                        .data(authService.refreshToken(refreshToken))
+                        .build());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(@RequestParam(name = "token") String token) {
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .body(ApiResponse.<String>builder()
+                        .statusCode(204)
+                        .message("")
+                        .data("Logout success!")
+                        .responseAt(LocalDateTime.now())
+                        .build());
     }
 
 
