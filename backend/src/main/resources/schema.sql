@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS User_Role (
 
 CREATE TABLE IF NOT EXISTS User_Profile (
 	UserId UUID PRIMARY KEY,
+	FirstName VARCHAR(255),
+	LastName VARCHAR(255),
 	Bio TEXT NULL,
 	Address TEXT NULL,
 	DayOfBirth DATE NULL,
@@ -79,10 +81,10 @@ CREATE TABLE Verification_Token (
 
 CREATE TABLE IF NOT EXISTS Follower (
 	Id BIGSERIAL PRIMARY KEY,
-	FollowerId UUID NOT NULL,
-	FollowedId UUID NOT NULL,
-	FOREIGN KEY (FollowerId) REFERENCES Users (Id),
-	FOREIGN KEY (FollowedId) REFERENCES Users (Id)
+	Follower UUID NOT NULL,
+	Followed UUID NOT NULL,
+	FOREIGN KEY (Follower) REFERENCES Users (Id),
+	FOREIGN KEY (Followed) REFERENCES Users (Id)
 );
 
 CREATE TABLE IF NOT EXISTS Groups (

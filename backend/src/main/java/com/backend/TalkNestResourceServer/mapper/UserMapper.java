@@ -1,16 +1,16 @@
 package com.backend.TalkNestResourceServer.mapper;
 
-import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
+import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.backend.TalkNestResourceServer.domain.entities.Users;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public class UserMapper {
 
-    public static Users mapToUser(UserRegisterDTO userRegisterDTO) {
-        return Users.builder().username(userRegisterDTO.getUsername())
-                .password(userRegisterDTO.getPassword())
-                .email(userRegisterDTO.getEmail()).build();
+    public static Users mapToUser(RegisterUserRequest registerUserRequest) {
+        return Users.builder().username(registerUserRequest.getUsername())
+                .password(registerUserRequest.getPassword())
+                .email(registerUserRequest.getEmail()).build();
     }
 
 }

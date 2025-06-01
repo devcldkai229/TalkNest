@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 @AllArgsConstructor
 @PasswordMatches
-public class UserRegisterDTO {
+public class RegisterUserRequest {
 
     @NotBlank(message = "Username cannot blank!")
     @NotEmpty(message = "Username cannot empty!")

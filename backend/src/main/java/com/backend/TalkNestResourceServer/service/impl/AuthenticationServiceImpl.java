@@ -4,7 +4,7 @@ import com.backend.TalkNestResourceServer.constant.ApplicationConstant;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
+import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.backend.TalkNestResourceServer.domain.entities.*;
 import com.backend.TalkNestResourceServer.domain.enums.AuthProvider;
 import com.backend.TalkNestResourceServer.domain.enums.Gender;
@@ -14,7 +14,6 @@ import com.backend.TalkNestResourceServer.mapper.UserMapper;
 import com.backend.TalkNestResourceServer.repository.*;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
 import com.backend.TalkNestResourceServer.service.JwtService;
-import com.backend.TalkNestResourceServer.service.UserService;
 import com.backend.TalkNestResourceServer.util.EmailUtil;
 import com.nimbusds.jose.JOSEException;
 import jakarta.mail.MessagingException;
@@ -53,8 +52,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
 
     @Override
-    public void registerUser(UserRegisterDTO userRegisterDTO, HttpServletRequest request) {
-        Users unSaveUser = UserMapper.mapToUser(userRegisterDTO);
+    public void registerUser(RegisterUserRequest registerUserRequest, HttpServletRequest request) {
+        Users unSaveUser = UserMapper.mapToUser(registerUserRequest);
         unSaveUser.setAuthProvider(AuthProvider.LOCAL);
 
         Users loadedUser = userRepository.save(unSaveUser);
@@ -82,7 +81,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         VerificationToken verificationToken = verificationTokenOptional.get();
-
         if(verificationToken.isExpired()) {
             return false;
         }
@@ -94,6 +92,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UserProfile profile = UserProfile.builder()
                 .userId(loadedUser.getId())
                 .address("#NoData")
+                .firstName("#User")
+                .lastName(loadedUser.getId().toString().substring(0,5))
                 .bio("#NoData")
                 .gender(Gender.Unknown)
                 .phoneNumber("#NoData")
@@ -134,7 +134,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String accessToken = jwtService.generateToken(requestLogin.getUsername(), false, loadedUser.getRoles());
         String refreshToken = jwtService.generateToken(requestLogin.getUsername(), true, loadedUser.getRoles());
-
 
         refreshTokenRepository.save(
                 RefreshToken.builder()
@@ -211,7 +210,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new UnauthenticatedException("Not perform this action");
         }
 
-
         InvalidateToken invalidateToken = InvalidateToken.builder()
                 .id(claimSet.getJWTID())
                 .token(token)
@@ -222,5 +220,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         invalidateTokenRepository.save(invalidateToken);
+    }
+
+    @Override
+    public void sendForgotPasswordEmail(String email) {
+
     }
 }

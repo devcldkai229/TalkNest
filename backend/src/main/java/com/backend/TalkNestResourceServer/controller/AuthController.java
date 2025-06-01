@@ -3,7 +3,7 @@ package com.backend.TalkNestResourceServer.controller;
 import com.backend.TalkNestResourceServer.domain.ApiResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
+import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +23,8 @@ public class AuthController {
     private final AuthenticationService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@RequestBody UserRegisterDTO userRegisterDTO, HttpServletRequest request) {
-        authService.registerUser(userRegisterDTO, request);
+    public ResponseEntity<ApiResponse<String>> register(@RequestBody RegisterUserRequest registerUserRequest, HttpServletRequest request) {
+        authService.registerUser(registerUserRequest, request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<String>builder()

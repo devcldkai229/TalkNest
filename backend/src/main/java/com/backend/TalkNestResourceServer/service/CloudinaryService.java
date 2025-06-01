@@ -9,4 +9,6 @@ public interface CloudinaryService {
 
     Map<?, ?> uploadImage(MultipartFile file, String folder, String publicId, boolean overwrite) throws IOException;
 
+
+
 }

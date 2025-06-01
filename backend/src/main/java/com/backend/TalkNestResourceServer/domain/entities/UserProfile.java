@@ -22,6 +22,10 @@ public class UserProfile {
     @Id
     private UUID userId;
 
+    private String firstName;
+
+    private String lastName;
+
     private String bio;
 
     private String address;

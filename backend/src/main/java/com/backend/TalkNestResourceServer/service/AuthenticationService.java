@@ -3,7 +3,7 @@ package com.backend.TalkNestResourceServer.service;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.users.UserRegisterDTO;
+import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -11,7 +11,7 @@ import java.text.ParseException;
 
 public interface AuthenticationService {
 
-    void registerUser(UserRegisterDTO user, HttpServletRequest request);
+    void registerUser(RegisterUserRequest user, HttpServletRequest request);
 
     boolean verifyEmailToken(String token);
 
@@ -24,4 +24,6 @@ public interface AuthenticationService {
     AuthenticationResponse refreshToken(String oldRefreshToken) throws ParseException, JOSEException;
 
     void logout(String token) throws ParseException, JOSEException;
+
+    void sendForgotPasswordEmail(String email);
 }
