@@ -1,7 +1,7 @@
 package com.backend.TalkNestResourceServer.service.impl;
 
 import com.backend.TalkNestResourceServer.domain.entities.Role;
-import com.backend.TalkNestResourceServer.config.JwtProps;
+import com.backend.TalkNestResourceServer.config.JwtConfig;
 import com.backend.TalkNestResourceServer.exception.signature.ExpiredTokenException;
 import com.backend.TalkNestResourceServer.exception.signature.VerifyTokenFailedException;
 import com.backend.TalkNestResourceServer.service.JwtService;
@@ -18,14 +18,14 @@ import java.util.*;
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    private final JwtProps jwtProps;
+    private final JwtConfig jwtConfig;
 
     private final JWSSigner signer;
 
     private final JWSVerifier verifier;
 
-    public JwtServiceImpl(JwtProps jwtProperties) throws JOSEException {
-        this.jwtProps = jwtProperties;
+    public JwtServiceImpl(JwtConfig jwtProperties) throws JOSEException {
+        this.jwtConfig = jwtProperties;
         byte[] secretBytes = jwtProperties.getSecret().getBytes();
         this.signer = new MACSigner(secretBytes);
         this.verifier = new MACVerifier(secretBytes);
@@ -38,11 +38,11 @@ public class JwtServiceImpl implements JwtService {
 
         JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                 .subject(subject)
-                .audience(jwtProps.getAudience())
-                .issuer(jwtProps.getIssuer())
+                .audience(jwtConfig.getAudience())
+                .issuer(jwtConfig.getIssuer())
                 .expirationTime(isRefreshToken
-                        ? (new Date(System.currentTimeMillis() + jwtProps.getExpirationRefresh()))
-                        : new Date(System.currentTimeMillis() + jwtProps.getExpiration()))
+                        ? (new Date(System.currentTimeMillis() + jwtConfig.getExpirationRefresh()))
+                        : new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString());
 
@@ -76,11 +76,11 @@ public class JwtServiceImpl implements JwtService {
             throw new ExpiredTokenException("Expired Token");
         }
 
-        if(!claimsSet.getIssuer().equals(jwtProps.getIssuer())) {
+        if(!claimsSet.getIssuer().equals(jwtConfig.getIssuer())) {
             throw new JOSEException("Invalid JWT Issuer");
         }
 
-        if(!claimsSet.getAudience().equals(jwtProps.getAudience())) {
+        if(!claimsSet.getAudience().equals(jwtConfig.getAudience())) {
             throw new JOSEException("Invalid JWT Audience");
         }
 

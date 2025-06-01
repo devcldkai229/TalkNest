@@ -1,5 +1,6 @@
 package com.backend.TalkNestResourceServer.service.impl;
 
+import com.backend.TalkNestResourceServer.constant.ApplicationConstant;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
 import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
@@ -8,10 +9,7 @@ import com.backend.TalkNestResourceServer.domain.entities.*;
 import com.backend.TalkNestResourceServer.domain.enums.AuthProvider;
 import com.backend.TalkNestResourceServer.domain.enums.Gender;
 import com.backend.TalkNestResourceServer.exception.common.NotFoundException;
-import com.backend.TalkNestResourceServer.exception.signature.ExpiredTokenException;
-import com.backend.TalkNestResourceServer.exception.signature.SendVerificationEmailException;
-import com.backend.TalkNestResourceServer.exception.signature.UnauthenticatedException;
-import com.backend.TalkNestResourceServer.exception.signature.UserNotExistsException;
+import com.backend.TalkNestResourceServer.exception.signature.*;
 import com.backend.TalkNestResourceServer.mapper.UserMapper;
 import com.backend.TalkNestResourceServer.repository.*;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
@@ -101,10 +99,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .phoneNumber("#NoData")
                 .dayOfBirth(null)
                 .lastUpdated(LocalDateTime.now())
-                .avatarUrl().build();
+                .avatarUrl(ApplicationConstant.DEFAULT_AVATAR)
+                .build();
 
         loadedUser.setVerified(true);
         userRepository.save(loadedUser);
+        userProfileRepository.save(profile);
         verificationTokenRepository.delete(verificationToken);
         return true;
     }
@@ -123,11 +123,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest requestLogin) throws JOSEException, ParseException {
-        var loadedUser = userService.loadedByUsername(requestLogin.getUsername());
-
-        if(loadedUser == null) {
-            throw new UnauthenticatedException("Username invalid!");
-        }
+        var loadedUser = userRepository.findByUsername(requestLogin.getUsername()).orElseThrow(
+                () -> new FailedAuthenticatedException("Un authentication user with username: " + requestLogin.getUsername())
+        );
 
         boolean isAuthenticated = passwordEncoder.matches(requestLogin.getPassword(), loadedUser.getPassword());
         if(!isAuthenticated) {
@@ -178,10 +176,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new NotFoundException("Refresh token invalid");
         }
 
-        var loadedUser = userService.loadedByUsername(username);
-        if(loadedUser == null) {
-            throw new NotFoundException("User with user name: " + username + " not exist!");
-        }
+        var loadedUser = userRepository.findByUsername(username).orElseThrow(
+                () -> new FailedAuthenticatedException("Un authentication user with username: " + username)
+        );
 
         String accessToken = jwtService.generateToken(username, false, loadedUser.getRoles());
         String refreshToken = jwtService.generateToken(username, true, loadedUser.getRoles());

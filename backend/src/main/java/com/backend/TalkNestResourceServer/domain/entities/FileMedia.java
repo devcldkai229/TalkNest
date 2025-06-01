@@ -1,5 +1,8 @@
 package com.backend.TalkNestResourceServer.domain.entities;
 
+import com.backend.TalkNestResourceServer.domain.enums.ContentType;
+import com.backend.TalkNestResourceServer.domain.enums.FileType;
+import com.backend.TalkNestResourceServer.domain.enums.FormatFile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,19 +26,22 @@ public class FileMedia {
 
     private Long contentId;
 
-    private String contentType;
+    @Enumerated(EnumType.STRING)
+    private ContentType contentType;
 
-    private String filetype;
+    @Enumerated(EnumType.STRING)
+    private FileType filetype;
 
     private String fileName;
-
-    private Long fileSize;
 
     private String cloudinaryPublicId;
 
     private String cloudinaryUrl;
 
     private String cloudinarySecureUrl;
+
+    @Enumerated(EnumType.STRING)
+    private FormatFile format;
 
     private Integer width;
 
@@ -45,5 +51,7 @@ public class FileMedia {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
 }

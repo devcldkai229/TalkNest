@@ -215,14 +215,15 @@ CREATE TABLE IF NOT EXISTS FileMedia (
     ContentType VARCHAR(50),  -- 'POST', 'MESSAGE', 'COMMENT', etc.
     FileType VARCHAR(50),  -- 'IMAGE', 'VIDEO', 'DOCUMENT', etc.
     FileName VARCHAR(255) DEFAULT '#NoData',
-    FileSize BIGINT DEFAULT 0,
+    Format VARCHAR(50),
     CloudinaryPublicId VARCHAR(500) UNIQUE,
     CloudinaryUrl VARCHAR(500),
     CloudinarySecureUrl VARCHAR(500),
     Width INT NULL,  -- For images/videos
     Height INT NULL,  -- For images/videos
     Duration INT NULL,  -- For videos/audio (in seconds)
-    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
+    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
+    UpdatedAt TIMESTAMP NULL
 );
 
 CREATE TABLE IF NOT EXISTS Conversation (
