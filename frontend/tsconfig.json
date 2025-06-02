@@ -5,7 +5,6 @@
       "@/*": ["src/*"]
     },
     "jsx": "react-jsx"
-    // các options khác nếu có...
   },
   "include": ["src"]
 }
