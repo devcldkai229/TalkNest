@@ -1,4 +1,4 @@
-package com.backend.TalkNestResourceServer.util;
+package com.backend.TalkNestResourceServer.service;
 
 import com.backend.TalkNestResourceServer.domain.entities.Users;
 import com.nimbusds.jose.util.Base64;
@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class EmailUtil {
+public class EmailService {
 
     @Value("${google.email.from.username}")
     private String from;
@@ -33,7 +33,7 @@ public class EmailUtil {
     }
 
     public void sendRegistrationVerificationEmail(Users user, String token, HttpServletRequest request) throws MessagingException, UnsupportedEncodingException {
-        Context context = new org.thymeleaf.context.Context();
+        Context context = new Context();
         String verifyUrl = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString())
                 .replacePath("api/auth/verify-email").queryParam("token", token).build().toString();
 
@@ -45,6 +45,25 @@ public class EmailUtil {
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
         mimeMessageHelper.setTo(user.getEmail());
         mimeMessageHelper.setSubject("Verify account!");
+        mimeMessageHelper.setText(htmlContent, true);
+        mimeMessageHelper.setFrom(from, "TalkNest - Social Platform");
+
+        emailSender.send(mimeMessage);
+    }
+
+    public void sendResetPasswordEmail(Users user, String token, HttpServletRequest request) throws MessagingException, UnsupportedEncodingException {
+        Context context = new Context();
+        String resetUrl = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString())
+                .replacePath("/reset-password").queryParam("token", token).build().toString();
+
+        context.setVariable("username", user.getUsername());
+        context.setVariable("resetUrl", resetUrl);
+        String htmlContent = templateEngine.process("ResetPasswordEmail.html", context);
+
+        MimeMessage mimeMessage = emailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        mimeMessageHelper.setTo(user.getEmail());
+        mimeMessageHelper.setSubject("Reset password!");
         mimeMessageHelper.setText(htmlContent, true);
         mimeMessageHelper.setFrom(from, "TalkNest - Social Platform");
 

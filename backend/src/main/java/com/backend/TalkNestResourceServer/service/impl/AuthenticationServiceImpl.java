@@ -1,9 +1,7 @@
 package com.backend.TalkNestResourceServer.service.impl;
 
 import com.backend.TalkNestResourceServer.constant.ApplicationConstant;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
+import com.backend.TalkNestResourceServer.domain.dtos.auths.*;
 import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.backend.TalkNestResourceServer.domain.entities.*;
 import com.backend.TalkNestResourceServer.domain.enums.AuthProvider;
@@ -13,8 +11,8 @@ import com.backend.TalkNestResourceServer.exception.signature.*;
 import com.backend.TalkNestResourceServer.mapper.UserMapper;
 import com.backend.TalkNestResourceServer.repository.*;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
+import com.backend.TalkNestResourceServer.service.EmailService;
 import com.backend.TalkNestResourceServer.service.JwtService;
-import com.backend.TalkNestResourceServer.util.EmailUtil;
 import com.nimbusds.jose.JOSEException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +41,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final EmailUtil emailUtil;
+    private final EmailService emailService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -57,7 +55,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         unSaveUser.setAuthProvider(AuthProvider.LOCAL);
 
         Users loadedUser = userRepository.save(unSaveUser);
-        String verifyToken = emailUtil.generateVerifyToken(loadedUser.getUsername());
+        String verifyToken = emailService.generateVerifyToken(loadedUser.getUsername());
         VerificationToken verificationToken = VerificationToken.builder()
                 .token(verifyToken).userId(loadedUser.getId())
                 .createdAt(LocalDateTime.now())
@@ -66,7 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         verificationTokenRepository.save(verificationToken);
         try {
-            emailUtil.sendRegistrationVerificationEmail(loadedUser, verifyToken, request);
+            emailService.sendRegistrationVerificationEmail(loadedUser, verifyToken, request);
         } catch (MessagingException | UnsupportedEncodingException e) {
             throw new SendVerificationEmailException(e.getMessage());
         }
@@ -223,7 +221,36 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void sendForgotPasswordEmail(String email) {
+    public void sendForgotPasswordEmail(ForgotPasswordPayLoadRequest request, HttpServletRequest httpRequest) throws MessagingException, UnsupportedEncodingException {
+        var loadedUser = userRepository.findByEmail(request.getEmail()).orElseThrow(
+                () -> new UserNotExistsException("User not found with email: " + request.getEmail())
+        );
 
+        String resetToken = emailService.generateVerifyToken(loadedUser.getUsername());
+        VerificationToken verificationToken = VerificationToken.builder().token(resetToken)
+                .userId(loadedUser.getId())
+                .createdAt(LocalDateTime.now()
+                        .plusMinutes(5))
+                .build();
+
+        verificationTokenRepository.save(verificationToken);
+        emailService.sendResetPasswordEmail(loadedUser, resetToken, httpRequest);
+    }
+
+    @Override
+    public void changePassword(ChangeUserPasswordRequest request) {
+        var loadedUser = userRepository.findById(request.getUserId()).orElseThrow(
+                () -> new UserNotExistsException("Not found user with id: "+request.getUserId())
+        );
+
+        if(!passwordEncoder.matches(request.getOldPassword(), loadedUser.getPassword())) {
+            throw new BadCredentialsException("Not matches password!");
+        }
+
+        if(!request.getRawPassword().equals(request.getRawPassword())) {
+            throw new ConfirmPasswordNotMatchException("Confirm password not matches with new password");
+        }
+
+        loadedUser.setPassword(passwordEncoder.encode(request.getRawPassword()));
     }
 }

@@ -1,12 +1,12 @@
 package com.backend.TalkNestResourceServer.service;
 
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.IntrospectResponse;
+import com.backend.TalkNestResourceServer.domain.dtos.auths.*;
 import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.nimbusds.jose.JOSEException;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
 public interface AuthenticationService {
@@ -25,5 +25,7 @@ public interface AuthenticationService {
 
     void logout(String token) throws ParseException, JOSEException;
 
-    void sendForgotPasswordEmail(String email);
+    void sendForgotPasswordEmail(ForgotPasswordPayLoadRequest request, HttpServletRequest httpRequest) throws MessagingException, UnsupportedEncodingException;
+
+    void changePassword(ChangeUserPasswordRequest request);
 }

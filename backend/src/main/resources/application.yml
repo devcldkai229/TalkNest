@@ -35,3 +35,5 @@ cloudinary:
   api-key: 254966277766774
   api-secret: liOAKvu5uPsi86CbJ6s6yrtdqxk
 
+reCaptcha:
+  secret-key: 6Lcd_VIrAAAAALY7_TkicIIXThMP0fo63-A0aweh

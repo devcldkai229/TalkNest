@@ -1,13 +1,14 @@
 package com.backend.TalkNestResourceServer.controller;
 
+import com.backend.TalkNestResourceServer.client.RecaptchaClient;
 import com.backend.TalkNestResourceServer.domain.ApiResponse;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationRequest;
-import com.backend.TalkNestResourceServer.domain.dtos.auths.AuthenticationResponse;
+import com.backend.TalkNestResourceServer.domain.dtos.auths.*;
 import com.backend.TalkNestResourceServer.domain.dtos.users.RegisterUserRequest;
 import com.backend.TalkNestResourceServer.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,11 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final AuthenticationService authService;
+
+    private final RecaptchaClient recaptchaClient;
+
+    @Value("${reCaptcha.secret-key}")
+    private String recaptchaSecretKey;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<String>> register(@RequestBody RegisterUserRequest registerUserRequest, HttpServletRequest request) {
@@ -53,6 +59,36 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(apiResponse);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ForgotPasswordPayLoadRequest request, HttpServletRequest httpServletRequest) {
+        RecaptchaVerifiedResponse ggResponse =  recaptchaClient.verify(RecaptchaVerifyRequest.builder()
+                .secretKey(recaptchaSecretKey)
+                .recaptchaToken(request.getRecaptchaToken())
+                .build());
+
+        if(!ggResponse.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    ApiResponse.builder().statusCode(HttpStatus.BAD_REQUEST.value())
+                            .message("Verify recaptcha failed!").data(null)
+                            .responseAt(LocalDateTime.now()).build()
+            );
+        }
+        try {
+            authService.sendForgotPasswordEmail(request, httpServletRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    ApiResponse.builder().statusCode(HttpStatus.OK.value())
+                            .message("Sending email to reset password successfully!").data(null)
+                            .responseAt(LocalDateTime.now()).build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ApiResponse.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .message("INTERNAL_SERVER_ERROR").data(null)
+                            .responseAt(LocalDateTime.now()).build()
+            );
+        }
     }
 
     @PostMapping("/login")
