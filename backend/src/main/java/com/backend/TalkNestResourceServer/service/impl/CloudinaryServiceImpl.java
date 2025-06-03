@@ -17,15 +17,14 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private final Cloudinary cloudinary;
 
     @Override
-    public Map<?, ?> uploadImage(MultipartFile file, String folder, String publicId, boolean overwrite) throws IOException {
-        Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(),
+    public Map<String, Object> uploadImage(MultipartFile file, String folder, String publicId, boolean overwrite) throws IOException {
+
+        return (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(),
                 ObjectUtils.asMap(
                         "folder", folder,
-                        "public_id", publicId,
+                        "public_id", "user_" + publicId,
                         "overwrite", overwrite
                 ));
-
-        return uploadResult;
     }
 
 

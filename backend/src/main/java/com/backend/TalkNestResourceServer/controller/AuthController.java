@@ -91,6 +91,16 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<?>> changePassword(@RequestBody ChangeUserPasswordRequest request) {
+        authService.changePassword(request);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                ApiResponse.builder().statusCode(HttpStatus.OK.value())
+                        .message("Change password successfully!").data(null)
+                        .responseAt(LocalDateTime.now()).build()
+        );
+    }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(@RequestBody AuthenticationRequest request) throws ParseException, JOSEException {
         return ResponseEntity.status(HttpStatus.OK)

@@ -29,3 +29,14 @@ export const forgotPassword = async ({email, recaptchaToken} : ForgotPasswordPay
 
     return response.data;
 }
+
+// async, await => khi bình thường giả sử application của mình có một cái pool chứa khoảng 100 threads
+// vậy nếu đặt ra mỗi một yêu cầu của người dùng là 1 thread vaajay thì application của chứa chịu tải tối đa 100 request
+// => bị ngu
+
+// javascript đẻ ra async await / ,net ra async await / java => nhưng có method ví dụ hashMap HashMapConcurrency
+
+// fetch api nếu không có IOBlock nó dừng cái ứng dụng ngồi đợi chừng nào web backend response thì thôi 
+// quá tải 
+
+// async await mỗi request đi đến be để cái yêu cầu ở đó và cái request đso trở về cái pool threads ban đầu 

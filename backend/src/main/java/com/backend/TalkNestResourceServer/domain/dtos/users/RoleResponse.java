@@ -12,18 +12,11 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserResponse {
+public class RoleResponse {
 
-    private String username;
+    private String id;
 
-    private String email;
+    private String name;
 
-    private String authProvider;
-
-    private String createdAt;
-
-    private String updatedAt;
-
-    private Set<RoleResponse> roles;
-
+    private Set<PermissionResponse> permissions;
 }
