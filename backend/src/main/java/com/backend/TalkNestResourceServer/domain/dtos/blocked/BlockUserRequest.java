@@ -1,4 +1,4 @@
-package com.backend.TalkNestResourceServer.domain.dtos.followers;
+package com.backend.TalkNestResourceServer.domain.dtos.blocked;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
