@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.userdetails.User;
+
+import java.util.UUID;
 
 @Data
 @Entity
@@ -19,8 +20,18 @@ public class Follower {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private User follower;
+    @Column(name = "follower_id", nullable = false)
+    private UUID followerId;
 
-    private User followed;
+    @Column(name = "followed_id", nullable = false)
+    private UUID followedId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "follower_id", referencedColumnName = "id", insertable = false, nullable = false)
+    private Users follower;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "followed_id", referencedColumnName = "id", insertable = false, nullable = false)
+    private Users followed;
 
 }

@@ -81,11 +81,20 @@ CREATE TABLE Verification_Token (
 
 CREATE TABLE IF NOT EXISTS Follower (
 	Id BIGSERIAL PRIMARY KEY,
-	Follower UUID NOT NULL,
-	Followed UUID NOT NULL,
-	FOREIGN KEY (Follower) REFERENCES Users (Id),
-	FOREIGN KEY (Followed) REFERENCES Users (Id)
+	FollowerId UUID NOT NULL,
+	FollowedId UUID NOT NULL,
+	FOREIGN KEY (FollowerId) REFERENCES Users (Id),
+	FOREIGN KEY (FollowedId) REFERENCES Users (Id)
 );
+
+CREATE TABLE IF NOT EXISTS Blocked {
+    Id BIGSERIAL PRIMARY KEY,
+	BlockerId UUID NOT NULL,
+	BlockedId UUID NOT NULL,
+	CreatedAt TIMESTAMP DEFAULT NOW(),
+	FOREIGN KEY (BlockerId) REFERENCES Users (Id),
+	FOREIGN KEY (BlockedId) REFERENCES Users (Id)
+}
 
 CREATE TABLE IF NOT EXISTS Groups (
     Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
