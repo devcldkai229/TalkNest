@@ -44,6 +44,7 @@ public class ProfileServiceImpl implements ProfileService {
         loadedProfile.setGender(request.getGender().equals("Female") ? Gender.Female : Gender.Male);
         loadedProfile.setFirstName(request.getFirstName());
         loadedProfile.setLastName(request.getLastName());
+        loadedProfile.setDayOfBirth(request.getDayOfBirth());
 
         userProfileRepository.save(loadedProfile);
     }

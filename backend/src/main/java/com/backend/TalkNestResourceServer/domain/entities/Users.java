@@ -31,6 +31,7 @@ public class Users implements UserDetails {
 
     private String email;
 
+    @Enumerated(EnumType.STRING)
     private AuthProvider authProvider;
 
     private boolean enabled = true;

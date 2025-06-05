@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/auth")
@@ -91,9 +92,9 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<?>> changePassword(@RequestBody ChangeUserPasswordRequest request) {
-        authService.changePassword(request);
+    @PostMapping("/reset-password/{id}")
+    public ResponseEntity<ApiResponse<?>> changePassword(@PathVariable(name = "id") String id, @RequestBody ChangeUserPasswordRequest request) {
+        authService.changePassword(UUID.fromString(id), request);
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponse.builder().statusCode(HttpStatus.OK.value())
                         .message("Change password successfully!").data(null)

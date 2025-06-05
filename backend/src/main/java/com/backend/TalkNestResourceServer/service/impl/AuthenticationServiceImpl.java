@@ -27,6 +27,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -238,9 +239,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void changePassword(ChangeUserPasswordRequest request) {
-        var loadedUser = userRepository.findById(request.getUserId()).orElseThrow(
-                () -> new UserNotExistsException("Not found user with id: "+request.getUserId())
+    public void changePassword(UUID userId, ChangeUserPasswordRequest request) {
+        var loadedUser = userRepository.findById(userId).orElseThrow(
+                () -> new UserNotExistsException("Not found user with id: "+ userId)
         );
 
         if(!passwordEncoder.matches(request.getOldPassword(), loadedUser.getPassword())) {

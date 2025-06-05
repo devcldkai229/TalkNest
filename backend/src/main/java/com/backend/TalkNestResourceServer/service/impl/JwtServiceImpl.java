@@ -1,7 +1,8 @@
 package com.backend.TalkNestResourceServer.service.impl;
 
+import com.backend.TalkNestResourceServer.domain.entities.Permission;
 import com.backend.TalkNestResourceServer.domain.entities.Role;
-import com.backend.TalkNestResourceServer.config.JwtConfig;
+import com.backend.TalkNestResourceServer.config.JwtPropertiesConfig;
 import com.backend.TalkNestResourceServer.exception.signature.ExpiredTokenException;
 import com.backend.TalkNestResourceServer.exception.signature.VerifyTokenFailedException;
 import com.backend.TalkNestResourceServer.service.JwtService;
@@ -10,22 +11,25 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtServiceImpl implements JwtService {
 
-    private final JwtConfig jwtConfig;
+    private final JwtPropertiesConfig jwtPropertiesConfig;
 
     private final JWSSigner signer;
 
     private final JWSVerifier verifier;
 
-    public JwtServiceImpl(JwtConfig jwtProperties) throws JOSEException {
-        this.jwtConfig = jwtProperties;
+    public JwtServiceImpl(JwtPropertiesConfig jwtProperties) throws JOSEException {
+        this.jwtPropertiesConfig = jwtProperties;
         byte[] secretBytes = jwtProperties.getSecret().getBytes();
         this.signer = new MACSigner(secretBytes);
         this.verifier = new MACVerifier(secretBytes);
@@ -38,21 +42,32 @@ public class JwtServiceImpl implements JwtService {
 
         JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                 .subject(subject)
-                .audience(jwtConfig.getAudience())
-                .issuer(jwtConfig.getIssuer())
+                .audience(jwtPropertiesConfig.getAudience())
+                .issuer(jwtPropertiesConfig.getIssuer())
                 .expirationTime(isRefreshToken
-                        ? (new Date(System.currentTimeMillis() + jwtConfig.getExpirationRefresh()))
-                        : new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
+                        ? (new Date(System.currentTimeMillis() + jwtPropertiesConfig.getExpirationRefresh()))
+                        : new Date(System.currentTimeMillis() + jwtPropertiesConfig.getExpiration()))
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString());
 
-        if (claimRoles != null) {
-            claimRoles.forEach(x -> {
-                claimsBuilder.claim("roles", x);
-                if(x.getPermissions() != null || x.getPermissions().isEmpty()) {
-                    claimsBuilder.claim("permissions", x.getPermissions());
+        if (claimRoles != null && !claimRoles.isEmpty()) {
+            List<String> roles = claimRoles.stream().map(Role::getName).toList();
+            claimsBuilder.claim("roles", roles);
+
+            Set<String> allPermissions = new HashSet<>();
+            for (Role role: claimRoles) {
+                if(role.getPermissions() != null && !role.getPermissions().isEmpty()) {
+                    Set<String> permissions = role.getPermissions()
+                            .stream()
+                            .map(Permission::getName)
+                            .collect(Collectors.toSet());
+                    allPermissions.addAll(permissions);
                 }
-            });
+            }
+
+            if(!allPermissions.isEmpty()) {
+                claimsBuilder.claim("permissions", new ArrayList<>(allPermissions));
+            }
         }
 
         JWTClaimsSet claimsSet = claimsBuilder.build();
@@ -76,11 +91,11 @@ public class JwtServiceImpl implements JwtService {
             throw new ExpiredTokenException("Expired Token");
         }
 
-        if(!claimsSet.getIssuer().equals(jwtConfig.getIssuer())) {
+        if(!claimsSet.getIssuer().equals(jwtPropertiesConfig.getIssuer())) {
             throw new JOSEException("Invalid JWT Issuer");
         }
 
-        if(!claimsSet.getAudience().equals(jwtConfig.getAudience())) {
+        if(!claimsSet.getAudience().equals(jwtPropertiesConfig.getAudience())) {
             throw new JOSEException("Invalid JWT Audience");
         }
 
@@ -111,4 +126,49 @@ public class JwtServiceImpl implements JwtService {
             return null;
         }
     }
+
+    @Override
+    public Collection<? extends GrantedAuthority> extractAuthorities(String token) {
+        try {
+            JWTClaimsSet claimsSet = verifyToken(token);
+            return extractAuthoritiesFromClaims(claimsSet);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private Collection<? extends GrantedAuthority> extractAuthoritiesFromClaims(JWTClaimsSet claimsSet) {
+        Set<GrantedAuthority> authorities = new HashSet<>();
+
+        try {
+            List<String> roles = claimsSet.getStringListClaim("roles");
+            if(roles != null) {
+                roles.forEach(x -> authorities.add(new SimpleGrantedAuthority("ROLE_" + x)));
+            }
+        } catch (ParseException e) {
+            try {
+                String role = claimsSet.getStringClaim("roles");
+                if(role != null) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                }
+            } catch (ParseException ex) {}
+        }
+
+        try {
+            List<String> permissions = claimsSet.getStringListClaim("permissions");
+            if(permissions != null) {
+                permissions.forEach(x -> authorities.add(new SimpleGrantedAuthority(x)));
+            }
+        } catch (ParseException e) {
+            try {
+                String permission = claimsSet.getStringClaim("permissions");
+                if(permission != null) {
+                    authorities.add(new SimpleGrantedAuthority(permission));
+                }
+            } catch (ParseException ex) {}
+        }
+
+        return authorities;
+    }
 }
+

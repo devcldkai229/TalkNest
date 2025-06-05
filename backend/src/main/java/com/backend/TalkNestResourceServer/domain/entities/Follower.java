@@ -27,11 +27,10 @@ public class Follower {
     private UUID followedId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "follower_id", referencedColumnName = "id", insertable = false, nullable = false)
+    @JoinColumn(name = "follower_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Users follower;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "followed_id", referencedColumnName = "id", insertable = false, nullable = false)
+    @JoinColumn(name = "followed_id", referencedColumnName = "id", insertable = false, updatable = false)
     private Users followed;
-
 }

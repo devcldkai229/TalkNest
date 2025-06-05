@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/users/follow")
+@RequestMapping("api/users/followings")
 public class FollowerController {
 
     private final FollowerService followerService;
@@ -63,7 +63,7 @@ public class FollowerController {
                         .data(followerService.getFollowingList(id)).build());
     }
 
-    @GetMapping("/{id}/followed")
+    @GetMapping("/{id}/followers")
     public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getFollowers(@PathVariable(name = "id") String id) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<UserProfileResponse>>builder()

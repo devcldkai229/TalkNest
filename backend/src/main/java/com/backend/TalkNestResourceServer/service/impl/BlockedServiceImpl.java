@@ -35,7 +35,7 @@ public class BlockedServiceImpl implements BlockedService {
                 () -> new UserNotExistsException("User not found with id: " + request.getBlockedId().toString())
         );
 
-        boolean isBlocked = blockedRepository.isExistByBlockerIdAndBlockedId(UUID.fromString(request.getBlockerId())
+        boolean isBlocked = blockedRepository.existsByBlockerIdAndBlockedId(UUID.fromString(request.getBlockerId())
                 , UUID.fromString(request.getBlockedId()));
         if(isBlocked) {
             throw new AlreadyBlockedException("You already blocked this user");

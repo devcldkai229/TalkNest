@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
+import java.util.UUID;
 
 public interface AuthenticationService {
 
@@ -27,5 +28,5 @@ public interface AuthenticationService {
 
     void sendForgotPasswordEmail(ForgotPasswordPayLoadRequest request, HttpServletRequest httpRequest) throws MessagingException, UnsupportedEncodingException;
 
-    void changePassword(ChangeUserPasswordRequest request);
+    void changePassword(UUID userId, ChangeUserPasswordRequest request);
 }

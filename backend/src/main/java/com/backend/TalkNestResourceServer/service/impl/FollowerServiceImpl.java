@@ -38,7 +38,7 @@ public class FollowerServiceImpl implements FollowerService {
                 () -> new UserNotExistsException("Followed not found with id: " + request.getFollowed())
         );
 
-        boolean isFollowed = followerRepository.isExistByFollowerIdAndFollowedId(follower.getUserId(), followed.getUserId());
+        boolean isFollowed = followerRepository.existsByFollowerIdAndFollowedId(follower.getUserId(), followed.getUserId());
         if(isFollowed) {
             throw new AlreadyFollowingException("You are already following this user");
         }
@@ -60,13 +60,12 @@ public class FollowerServiceImpl implements FollowerService {
                 () -> new UserNotExistsException("Followed not found with id: " + request.getFollowed())
         );
 
-        boolean isFollowed = followerRepository.isExistByFollowerIdAndFollowedId(follower.getUserId(), followed.getUserId());
-        if(isFollowed) return;
+        boolean isFollowed = followerRepository.existsByFollowerIdAndFollowedId(follower.getUserId(), followed.getUserId());
+        if(!isFollowed) return;
 
         Follower loadedFollower =  followerRepository.findByFollowerIdAndFollowedId(follower.getUserId(), followed.getUserId()).orElse(null);
-        if(loadedFollower != null) {
-            followerRepository.deleteById(loadedFollower.getId());
-        }
+        assert loadedFollower != null;
+        followerRepository.deleteById(loadedFollower.getId());
     }
 
     @Override

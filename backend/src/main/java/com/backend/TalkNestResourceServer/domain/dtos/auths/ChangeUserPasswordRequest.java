@@ -17,9 +17,6 @@ import java.util.UUID;
 public class ChangeUserPasswordRequest {
 
     @NotBlank
-    private UUID userId;
-
-    @NotBlank
     private String oldPassword;
 
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{6,}",
