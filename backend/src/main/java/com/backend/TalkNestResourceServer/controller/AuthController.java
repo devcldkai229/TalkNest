@@ -123,7 +123,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestParam(name = "token") String token) {
+    public ResponseEntity<ApiResponse<String>> logout(@RequestParam(name = "token") String token) throws ParseException, JOSEException {
+        authService.logout(token);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(ApiResponse.<String>builder()
                         .statusCode(204)

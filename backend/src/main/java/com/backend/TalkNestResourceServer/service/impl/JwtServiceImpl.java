@@ -50,7 +50,8 @@ public class JwtServiceImpl implements JwtService {
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString());
 
-        if (claimRoles != null && !claimRoles.isEmpty()) {
+
+        if (!isRefreshToken && (claimRoles != null && !claimRoles.isEmpty())) {
             List<String> roles = claimRoles.stream().map(Role::getName).toList();
             claimsBuilder.claim("roles", roles);
 
@@ -87,7 +88,7 @@ public class JwtServiceImpl implements JwtService {
 
         JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
 
-        if(claimsSet.getExpirationTime() != null && claimsSet.getExpirationTime().before(new Date())) {
+        if(claimsSet.getExpirationTime() == null && claimsSet.getExpirationTime().before(new Date())) {
             throw new ExpiredTokenException("Expired Token");
         }
 
@@ -95,7 +96,7 @@ public class JwtServiceImpl implements JwtService {
             throw new JOSEException("Invalid JWT Issuer");
         }
 
-        if(!claimsSet.getAudience().equals(jwtPropertiesConfig.getAudience())) {
+        if(claimsSet.getAudience().stream().noneMatch(x -> x.equals(jwtPropertiesConfig.getAudience()))) {
             throw new JOSEException("Invalid JWT Audience");
         }
 

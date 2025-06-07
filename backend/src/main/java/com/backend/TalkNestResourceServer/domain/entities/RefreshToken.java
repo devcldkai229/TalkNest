@@ -24,6 +24,7 @@ public class RefreshToken {
 
     private UUID userId;
 
+    @Column(length = 1000)
     private String token;
 
     private LocalDateTime expiredDate;

@@ -6,6 +6,7 @@ import com.backend.TalkNestResourceServer.domain.entities.Users;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,14 @@ public class UserMapper {
     public static Users mapToUser(RegisterUserRequest registerUserRequest) {
         return Users.builder().username(registerUserRequest.getUsername())
                 .password(registerUserRequest.getPassword())
-                .email(registerUserRequest.getEmail()).build();
+                .email(registerUserRequest.getEmail())
+                .credentialsNonExpired(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)
+                .enabled(true)
+                .isVerified(false)
+                .createdAt(LocalDateTime.now())
+                .build();
     }
 
     public static UserResponse mapToUserResponse(Users users) {

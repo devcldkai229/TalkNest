@@ -26,8 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -50,11 +49,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtService jwtService;
 
+    private final RoleRepository roleRepository;
+
     @Override
     public void registerUser(RegisterUserRequest registerUserRequest, HttpServletRequest request) {
         Users unSaveUser = UserMapper.mapToUser(registerUserRequest);
         unSaveUser.setAuthProvider(AuthProvider.LOCAL);
 
+        unSaveUser.setPassword(passwordEncoder.encode(unSaveUser.getPassword()));
         Users loadedUser = userRepository.save(unSaveUser);
         String verifyToken = emailService.generateVerifyToken(loadedUser.getUsername());
         VerificationToken verificationToken = VerificationToken.builder()
@@ -102,6 +104,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         loadedUser.setVerified(true);
+        Set<Role> roles = new HashSet<>();
+        roles.add(roleRepository.findByName("USER").orElse(null));
+        loadedUser.setRoles(roles);
         userRepository.save(loadedUser);
         userProfileRepository.save(profile);
         verificationTokenRepository.delete(verificationToken);
@@ -126,6 +131,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 () -> new FailedAuthenticatedException("Un authentication user with username: " + requestLogin.getUsername())
         );
 
+        if(!preAuthenticationCheck(loadedUser)) {
+            throw new UnauthenticatedException("Account is not valid!");
+        }
+
         boolean isAuthenticated = passwordEncoder.matches(requestLogin.getPassword(), loadedUser.getPassword());
         if(!isAuthenticated) {
             throw new BadCredentialsException("Password invalid!");
@@ -133,17 +142,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String accessToken = jwtService.generateToken(requestLogin.getUsername(), false, loadedUser.getRoles());
         String refreshToken = jwtService.generateToken(requestLogin.getUsername(), true, loadedUser.getRoles());
+        RefreshToken refreshTokenModel = RefreshToken.builder()
+                .userId(loadedUser.getId())
+                .token(refreshToken)
+                .createdAt(LocalDateTime.now())
+                .expiredDate(jwtService.verifyToken(refreshToken)
+                        .getExpirationTime().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime())
+                .build();
 
-        refreshTokenRepository.save(
-                RefreshToken.builder()
-                        .userId(loadedUser.getId())
-                        .token(refreshToken)
-                        .createdAt(LocalDateTime.now())
-                        .expiredDate(jwtService.verifyToken(refreshToken)
-                                .getExpirationTime().toInstant()
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDateTime())
-                        .build());
+        refreshTokenRepository.save(refreshTokenModel);
 
         return AuthenticationResponse.builder()
                 .isAuthenticated(true)
@@ -253,5 +262,29 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         loadedUser.setPassword(passwordEncoder.encode(request.getRawPassword()));
+    }
+
+    private boolean preAuthenticationCheck(Users user) {
+        if(!user.isAccountNonExpired()) {
+            return false;
+        }
+
+        if(!user.isAccountNonLocked()) {
+            return false;
+        }
+
+        if(!user.isEnabled()) {
+            return false;
+        }
+
+        if(!user.isCredentialsNonExpired()) {
+            return false;
+        }
+
+        if(!user.isVerified()) {
+            return false;
+        }
+
+        return true;
     }
 }
