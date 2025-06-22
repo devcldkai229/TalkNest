@@ -35,10 +35,9 @@ public class JwtServiceImpl implements JwtService {
         this.verifier = new MACVerifier(secretBytes);
     }
 
-
     @Override
     public String generateToken(String subject, boolean isRefreshToken, Set<Role> claimRoles) throws JOSEException {
-        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256).type(JOSEObjectType.JWT).build();
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS512).type(JOSEObjectType.JWT).build();
 
         JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
                 .subject(subject)
@@ -105,7 +104,7 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
-    public String extractUsername(String token) {
+    public String extractUserId(String token) {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
 

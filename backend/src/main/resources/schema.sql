@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS PostHashTag (
 
 CREATE TABLE IF NOT EXISTS FileMedia (
     Id BIGSERIAL PRIMARY KEY,
-    ContentId BIGINT,  -- Can be postid, messageid, etc.
+    ContentId BIGINT,  -- Can be postid, messageid, conversationId, etc.
     ContentType VARCHAR(50),  -- 'POST', 'MESSAGE', 'COMMENT', etc.
     FileType VARCHAR(50),  -- 'IMAGE', 'VIDEO', 'DOCUMENT', etc.
     FileName VARCHAR(255) DEFAULT '#NoData',
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS FileMedia (
     UpdatedAt TIMESTAMP NULL
 );
 
-CREATE TABLE IF NOT EXISTS Conversation (
+CREATE TABLE IF NOT EXISTS ConversationGroup (
     Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     Type VARCHAR(20) NOT NULL,  -- 'DIRECT', 'GROUP'
     Name TEXT NULL,  -- For group chats
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS Conversation (
     FOREIGN KEY (CreatorId) REFERENCES Users (Id)
 );
 
-CREATE TABLE IF NOT EXISTS ConversationParticipants (
+CREATE TABLE IF NOT EXISTS ConversationGroupParticipants (
     Id BIGSERIAL PRIMARY KEY,
     ConversationId UUID NOT NULL ,
     UserId UUID NOT NULL,
@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS ConversationParticipants (
     CONSTRAINT UniqueConversationUser UNIQUE(ConversationId, UserId)
 );
 
-CREATE TABLE IF NOT EXISTS Messages ( -- thuộc về conversation chứa các tin nhắn đoạn chat
+CREATE TABLE IF NOT EXISTS MessagesGroup ( -- thuộc về conversation chứa các tin nhắn đoạn chat
     Id BIGSERIAL PRIMARY KEY,
     ConversationId UUID NOT NULL,
     SenderId UUID NOT NULL,
@@ -275,12 +275,32 @@ CREATE TABLE IF NOT EXISTS Messages ( -- thuộc về conversation chứa các t
     FOREIGN KEY (SenderId) REFERENCES Users (Id)
 );
 
-CREATE TABLE IF NOT EXISTS MessageStatuses (
+CREATE TABLE IF NOT EXISTS ConversationUser (
+    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ThisUser UUID,
+    OtherUser UUID,
+    CreatedAt TIMESTAMP
+)
+
+CREATE TABLE IF NOT EXISTS MessagesUser (
+    Id BIGSERIAL PRIMARY KEY,
+    ConversationId UUID,
+    SenderId UUID NOT NULL,
+    ReceiverId UUID NOT NULL,
+    Content TEXT,
+    CreatedAt TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    FOREIGN KEY (ConversationId) REFERENCES ConversationUser(Id),
+    FOREIGN KEY (SenderId) REFERENCES Users (Id),
+    FOREIGN KEY (ReceiverId) REFERENCES Users (Id)
+)
+
+CREATE TABLE IF NOT EXISTS MessageStatus (
     Id BIGSERIAL PRIMARY KEY,
     MessageId BIGINT NOT NULL,
     UserId UUID NOT NULL,
     Status VARCHAR(20) NOT NULL,  -- 'DELIVERED', 'READ'
-    StatusTimestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    Status TIMESTAMP NOT NULL DEFAULT NOW(),
     FOREIGN KEY (MessageId) REFERENCES Messages (Id),
     FOREIGN KEY (UserId) REFERENCES Users (Id),
     CONSTRAINT UniqueMessasgeUser UNIQUE(MessageId, UserId)
@@ -309,21 +329,21 @@ CREATE TABLE IF NOT EXISTS Notification (
     FOREIGN KEY (TypeId) REFERENCES NotificationType (Id)
 );
 
--- Partition large tables
-CREATE TABLE Post_2024 PARTITION OF Post
-FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
-
--- Add materialized views for analytics
-CREATE MATERIALIZED VIEW user_stats AS
-SELECT userid, COUNT(*) as post_count,
-       COUNT(DISTINCT follower.followerid) as follower_count
-FROM post LEFT JOIN follower ON post.userid = follower.followedid
-GROUP BY userid;
-
-
--- Add check constraints
-ALTER TABLE Post ADD CONSTRAINT check_post_type
-CHECK (PostType IN ('TEXT', 'IMAGE', 'VIDEO', 'LINK'));
-
-ALTER TABLE Groups ADD CONSTRAINT check_privacy_level
-CHECK (PrivacyLevel IN ('PUBLIC', 'PRIVATE'));
+---- Partition large tables
+--CREATE TABLE Post_2024 PARTITION OF Post
+--FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+--
+---- Add materialized views for analytics
+--CREATE MATERIALIZED VIEW user_stats AS
+--SELECT userid, COUNT(*) as post_count,
+--       COUNT(DISTINCT follower.followerid) as follower_count
+--FROM post LEFT JOIN follower ON post.userid = follower.followedid
+--GROUP BY userid;
+--
+--
+---- Add check constraints
+--ALTER TABLE Post ADD CONSTRAINT check_post_type
+--CHECK (PostType IN ('TEXT', 'IMAGE', 'VIDEO', 'LINK'));
+--
+--ALTER TABLE Groups ADD CONSTRAINT check_privacy_level
+--CHECK (PrivacyLevel IN ('PUBLIC', 'PRIVATE'));

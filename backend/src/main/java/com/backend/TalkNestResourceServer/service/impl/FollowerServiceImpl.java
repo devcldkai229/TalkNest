@@ -4,7 +4,6 @@ import com.backend.TalkNestResourceServer.domain.dtos.followers.FollowingUsersRe
 import com.backend.TalkNestResourceServer.domain.dtos.followers.UnfollowUserRequest;
 import com.backend.TalkNestResourceServer.domain.dtos.users.UserProfileResponse;
 import com.backend.TalkNestResourceServer.domain.entities.Follower;
-import com.backend.TalkNestResourceServer.domain.entities.Users;
 import com.backend.TalkNestResourceServer.exception.signature.AlreadyFollowingException;
 import com.backend.TalkNestResourceServer.exception.signature.UserNotExistsException;
 import com.backend.TalkNestResourceServer.mapper.UserProfileMapper;

@@ -15,7 +15,7 @@ public interface JwtService {
 
     JWTClaimsSet verifyToken(String token) throws JOSEException, ParseException;
 
-    String  extractUsername(String user) throws ParseException;
+    String  extractUserId(String user) throws ParseException;
 
     Object extractClaim(String token, String claimName) throws ParseException;
 

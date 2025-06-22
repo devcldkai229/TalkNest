@@ -31,6 +31,10 @@ public class Users implements UserDetails {
 
     private String email;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
+    private UserProfile profile;
+
     @Enumerated(EnumType.STRING)
     private AuthProvider authProvider;
 

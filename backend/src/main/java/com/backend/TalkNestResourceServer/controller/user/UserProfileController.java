@@ -8,10 +8,13 @@ import com.backend.TalkNestResourceServer.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,6 +26,7 @@ public class UserProfileController {
     private final ProfileService profileService;
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROFILE_UPDATE') or @profileAuthorization.canAccessProfile(#id)")
     public ResponseEntity<ApiResponse<ProfileDetailsResponse>> getProfile(@PathVariable(name = "id") String id) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<ProfileDetailsResponse>builder()
@@ -34,9 +38,10 @@ public class UserProfileController {
     }
 
     @PutMapping("/update-info/{id}")
-    public ResponseEntity<ApiResponse<String>> updateInfoProfile(@PathVariable(name = "id") String id,
+    @PreAuthorize("hasAuthority('PROFILE_UPDATE')")
+    public ResponseEntity<ApiResponse<String>> updateInfoProfile(@AuthenticationPrincipal UserPrincipal principal,
                                                                  @RequestBody UpdateProfileRequest request) {
-        profileService.updateUserProfile(UUID.fromString(id), request);
+        profileService.updateUserProfile(UUID.fromString(principal.getName()), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<String>builder()
                         .statusCode(HttpStatus.CREATED.value())
@@ -47,6 +52,7 @@ public class UserProfileController {
     }
 
     @PatchMapping("/change-avatar/{id}")
+    @PreAuthorize("hasAuthority('PROFILE_UPDATE') or @profileAuthorization.canAccessProfile(#id)")
     public ResponseEntity<ApiResponse<ProfileDetailsResponse>> changeAvatar(@PathVariable(name = "id") String id,
                                                                             @RequestPart("file") MultipartFile file) {
         ChangeProfileAvatarRequest request = ChangeProfileAvatarRequest.builder()

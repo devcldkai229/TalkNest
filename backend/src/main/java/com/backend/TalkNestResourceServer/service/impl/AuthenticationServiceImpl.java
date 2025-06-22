@@ -140,8 +140,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new BadCredentialsException("Password invalid!");
         }
 
-        String accessToken = jwtService.generateToken(requestLogin.getUsername(), false, loadedUser.getRoles());
-        String refreshToken = jwtService.generateToken(requestLogin.getUsername(), true, loadedUser.getRoles());
+        String accessToken = jwtService.generateToken(loadedUser.getId().toString(), false, loadedUser.getRoles());
+        String refreshToken = jwtService.generateToken(loadedUser.getId().toString(), true, loadedUser.getRoles());
         RefreshToken refreshTokenModel = RefreshToken.builder()
                 .userId(loadedUser.getId())
                 .token(refreshToken)
@@ -176,19 +176,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse refreshToken(String oldRefreshToken) throws ParseException, JOSEException {
-        var username = jwtService.extractUsername(oldRefreshToken);
+        var userId = jwtService.extractUserId(oldRefreshToken);
 
         RefreshToken loadedToken = refreshTokenRepository.findByToken(oldRefreshToken).orElse(null);
         if(loadedToken == null) {
             throw new NotFoundException("Refresh token invalid");
         }
 
-        var loadedUser = userRepository.findByUsername(username).orElseThrow(
-                () -> new FailedAuthenticatedException("Un authentication user with username: " + username)
+        var loadedUser = userRepository.findById(UUID.fromString(userId)).orElseThrow(
+                () -> new FailedAuthenticatedException("Un authentication user with username: " + userId)
         );
 
-        String accessToken = jwtService.generateToken(username, false, loadedUser.getRoles());
-        String refreshToken = jwtService.generateToken(username, true, loadedUser.getRoles());
+        String accessToken = jwtService.generateToken(userId, false, loadedUser.getRoles());
+        String refreshToken = jwtService.generateToken(userId, true, loadedUser.getRoles());
 
         refreshTokenRepository.save(RefreshToken.builder()
                 .userId(loadedUser.getId())

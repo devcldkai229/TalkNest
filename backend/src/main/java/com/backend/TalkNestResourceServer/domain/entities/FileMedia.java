@@ -1,21 +1,20 @@
 package com.backend.TalkNestResourceServer.domain.entities;
 
-import com.backend.TalkNestResourceServer.domain.enums.ContentType;
 import com.backend.TalkNestResourceServer.domain.enums.FileType;
-import com.backend.TalkNestResourceServer.domain.enums.FormatFile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Builder
-@Table(name = "File_Media")
+@Table(name = "file_media")
 @NoArgsConstructor
 @AllArgsConstructor
 public class FileMedia {
@@ -24,24 +23,30 @@ public class FileMedia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "content_id")
     private Long contentId;
 
-    @Enumerated(EnumType.STRING)
-    private ContentType contentType;
+    @Column(name = "content_type", length = 50)
+    private String contentType = "MESSAGE";
 
     @Enumerated(EnumType.STRING)
-    private FileType filetype;
+    @Column(name = "file_type", length = 50)
+    private FileType fileType;
 
+    @Column(name = "file_name")
     private String fileName;
 
+    @Column(length = 50)
+    private String format;
+
+    @Column(name = "cloudinary_public_id", length = 500, unique = true)
     private String cloudinaryPublicId;
 
+    @Column(name = "cloudinary_url", length = 500)
     private String cloudinaryUrl;
 
+    @Column(name = "cloudinary_secure_url", length = 500)
     private String cloudinarySecureUrl;
-
-    @Enumerated(EnumType.STRING)
-    private FormatFile format;
 
     private Integer width;
 
@@ -50,8 +55,11 @@ public class FileMedia {
     private Integer duration;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 }

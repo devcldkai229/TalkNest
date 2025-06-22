@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers("api/auth/**").permitAll()
-                            .requestMatchers("api/users/**").hasRole("USER");
+                            .requestMatchers("api/users/profiles/**").hasAnyRole("USER", "ADMIN");
                 });
 
         return httpSecurity.build();
@@ -68,7 +69,8 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() throws JwtException {
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA512");
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
+                .macAlgorithm(MacAlgorithm.HS512).build(); // phải chỉ rõ ràng ra thuật toán.
         jwtDecoder.setJwtValidator(jwtOAuth2TokenValidator());
 
         return jwtDecoder;
@@ -79,7 +81,6 @@ public class SecurityConfig {
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
         validators.add(new JwtTimestampValidator());
         validators.add(new JwtIssuerValidator(issuerLocation));
-        validators.add(new JwtClaimValidator<>("aud", x -> x.equals(audience)));
 
         return new DelegatingOAuth2TokenValidator<>(validators);
     }

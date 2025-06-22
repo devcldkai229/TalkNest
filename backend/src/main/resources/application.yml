@@ -1,6 +1,6 @@
 spring:
   application:
-    name: "Talk Nest Social Application"
+    name: "Talk Nest Social Platform"
     port: 8080
 
   datasource:
@@ -12,10 +12,19 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RBMQ_USERNAME:guest}
+    password: ${RBMQ_PASSWORD:guest}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 google:
   email:
@@ -25,7 +34,7 @@ google:
       port: ${FROM_PORT:587}
 
 jwt:
-  secret: a3946a91bebabe009e637d0cd132329a1013eb020d37d3fda8a431287471d10262e21ed1f8e774ba91245c524e1ae6305a312afcf743d58cebbe43b9d7129556c6dc4b5ba26f554440108002df765b12a35984e3f595539145a753da90fc5ce389b5cbb6e9fe1843888eea634583a85397a565f4198e34a2b3d199f8fa5c37d65fa3295d344439da6b6051f10990d5f95441ef09e9e9fde5fb9d64e569468c4e85193c9da367abfb9a1e5937167bb2e81f53f405e9c524c565ec2b69a90bf272505ab725d6a6f3527529b3face64729d6bfd7ae3a4b517a453554356042b1e9d2cf9345e08d971150e021945b03a2fc1b0e802bae4b7af2852de4baad44b4b0e
+  secret: 8ceaaf09aad1e316c389d495f7d12e866cd0731d8af9bfbde400666a44796f4fe8dc79fc1e88ad84ec159ccb4e735758268a1f57a2c332401e95343c2bf1ac7fcb9803fa64ca1c9595e7e27eff07529ffd268ad557844238a81ea1887537f20a56d1919f64c10ee131237926ac6b4cbc631deb683a75c9deeed29ff529336f27956fb5d7a9e261b20e689aa06b1ee51c32e46ac4cb5984bac8dc33cbcf73ccbe5a1253e3c541190b58ecd40d84060737192a6fdbc899a8105da093972d441cd50fdbbea8b7378d480d3e63f787834a4020ae04494a4b54edbb0e83cc907f85ff9fb1b93936cc5de59dc1de11a4664cabc2855482c52876362e97cb60b71a1bc773e9dd1d0d72b653dcdcba7eee8c60e54d0e583253b0cd7f29e474e82a53c4a5d3dfc23c9d9f4ce5f55d49f3749df7a06eeb33676580ca108ee5d67a45299d8c70033be1d8a46f020703274f8608c331092f22c19ea1f51703c11cda2a78a2caa2f308f5c9b54d1ecdd3b300ebc1246cb82880cfee0812ef00e71dbf40f750070c626953e3f413e4525144214240b1a689b18789be03050195f5402916cc0adfa2ea0d70271088634fb6681edd2258702b96bf22c0c8555a8e3e5a4833266093287ace4e291f1d23d5f4ccdbc1faede768011172b5201247f8230b656bca9c3000df30f0ad5496ad16d05d29254fc6981417ed738cb65f062193eafbcd243412
   expiration: 36000
   issuer: "talknest.com"
   audience: "talknest.webapi.resource-server"
